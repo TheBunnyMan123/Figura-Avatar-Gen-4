@@ -1,7 +1,6 @@
 local openWingsAnim = animations["models.model"].OpenWings
 local closeWingsAnim = animations["models.model"].CloseWings
 
-print(models:getChildren())
 local wingRight = models.model.root.Body.WingRight
 local wingLeft = models.model.root.Body.WingLeft
 
