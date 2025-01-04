@@ -1,0 +1,9 @@
+{
+  "name": "Bunny's Avatar Gen 4",
+  "description": "Bunny's Fourth Generation Avatar",
+  "authors": [
+    "TheKillerBunny"
+  ],
+  "color": "#5865f2",
+  "autoScripts": ["preload"]
+}
