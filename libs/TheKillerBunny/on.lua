@@ -75,9 +75,10 @@ function on.newLimiter(name, func)
 end
 
 for name, event in pairs(events:getEvents()) do
-   local invoke = on.newEvent(name)
-
-   event:register(invoke)
+   if not (name == "TICK" or name == "WORLD_TICK") then
+      local invoke = on.newEvent(name)
+      event:register(invoke)
+   end
 end
 
 on = setmetatable(on, metatable)
