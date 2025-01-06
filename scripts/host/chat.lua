@@ -14,6 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
+if client.compareVersions("1.21.4", client.getVersion()) < 0 then
+   return
+end
+
 ---@alias TextComponentHoverEventAction ('show_text'|'show_item'|'show_entity')
 ---@alias TextComponentHoverEvent { action: TextComponentHoverEventAction, contents: string|TextJsonComponent }
 ---@alias TextComponentClickEventAction ('open_url'|'open_file'|'run_command'|'suggest_command')
@@ -939,10 +943,6 @@ on["CHAT_RECEIVE_MESSAGE"] = function(rawText, jsonText)
       else
          table.insert(final, v)
       end
-   end
-
-   if not toJson(final):match("lua") and BunnyChatUtils.__VARS["messageCount"] > 1 then
-      host:clipboard(toJson(final))
    end
 
    return toJson(final)

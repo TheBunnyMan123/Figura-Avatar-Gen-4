@@ -1,5 +1,6 @@
 local TextComponents = require("libs.TheKillerBunny.TextComponents")
 
+--{{ options
 local STEP = 1 -- How many blocks to step
 local SIZE = vec(68, 68) -- How big the map is
 local POS = vec(3, 3) -- Top left corner of the map
@@ -7,10 +8,13 @@ local TIME_PER_FRAME = 6 -- How long to spend calculating the map per frame (in 
 local HALF_SIZE = SIZE / 2
 local SCALE = 1.5 -- Map scale
 local SKY_COLOR = vec(0.36862, 0.64705, 1, 0.5)
-local SHADE_LAVA = false -- Minecraft maps do not do this but it makes it look so much better
+local SHADE_LAVA = true -- Minecraft maps do not do this but it makes it look so much better
 local CACHE_AGE = 40 -- The amount of time a color can stay in the cache
 local WATER_BASE = 1.25 -- The base of the water multiplier
 local WATER_DIVISOR = 11.5 -- The amount to divide the water multiplier by
+--}}
+
+local mc21 = (client.compareVersions(client.getVersion(), "1.21") >= 0)
 
 local colorCache = {}
 
@@ -166,9 +170,6 @@ on[{"tick", "player_moved:1"}] = function()
    infoTask:setText(compose:toJson())
 end
 
-local indicatorTexture = textures:fromVanilla("map_indicator", "minecraft:textures/map/map_icons.png")
-local indicatorTasks = {}
-
 local function isInRange(pos, min, max)
    local clamped = vec(
       math.clamp(pos.x, min.x, max.x),
@@ -184,18 +185,24 @@ local function isInRange(pos, min, max)
 end
 
 -- I stole this from 4P5's figmap
+local amount = mc21 and 5 or 68
 local function rotateSpriteAroundPos(rot, pos, scale)
    local mat = matrices.mat4()
          :scale(scale, scale, 1)
-         :translate(68 * scale, 68 * scale)
+         :translate(amount * scale, amount * scale)
          :rotate(0, 0, rot)
-         :translate(-68 * scale, -68 * scale)
+         :translate(-amount * scale, -amount * scale)
          :translate(pos)
-         :translate(68 * scale, 68 * scale)
+         :translate(amount * scale, amount * scale)
 
    return mat
 end
 
+local indicatorTexture = textures:fromVanilla("map_indicators", "minecraft:textures/map/map_icons.png")
+local mc21PlayerIndicator = textures:fromVanilla("map_indicator_player", "minecraft:textures/map/decorations/player.png")
+local mc21PlayerOffMapIndicator = textures:fromVanilla("map_indicator_player_off_map", "minecraft:textures/map/decorations/player_off_map.png")
+
+local indicatorTasks = {}
 on[{"tick", "modulo:4"}] = function(tick)
    for _, v in pairs(indicatorTasks) do
       v:remove()
@@ -228,20 +235,36 @@ on[{"tick", "modulo:4"}] = function(tick)
 
       rot = rot - 180
 
-      if inRange then
-         indicatorTasks[uuid] = mdl:newSprite(v:getUUID())
-            :setTexture(indicatorTexture, 128, 128)
-            :region(8, 8)
-            :setUVPixels(0, 0)
-            :setColor(colorCache[uuid].color)
-            :setMatrix(rotateSpriteAroundPos(rot, -onMapPos, 8/128 * SCALE))
+      if client.compareVersions(client.getVersion(), "1.21") >= 0 then
+         if inRange then
+            indicatorTasks[uuid] = mdl:newSprite(v:getUUID())
+                  :setTexture(mc21PlayerIndicator, 8, 8)
+                  :region(8, 8)
+                  :setColor(colorCache[uuid].color)
+                  :setMatrix(rotateSpriteAroundPos(rot, -onMapPos, (mc21 and 1 or 8/128) * SCALE))
+         else
+            indicatorTasks[uuid] = mdl:newSprite(v:getUUID())
+                  :setTexture(mc21PlayerOffMapIndicator, 8, 8)
+                  :region(8, 8)
+                  :setColor(colorCache[uuid].color)
+                  :setMatrix(rotateSpriteAroundPos(0, -onMapPos, (mc21 and 1 or 8/128) * SCALE))
+         end
       else
-         indicatorTasks[uuid] = mdl:newSprite(v:getUUID())
-            :setTexture(indicatorTexture, 128, 128)
-            :setUVPixels(48, 0)
-            :region(8, 8)
-            :setColor(colorCache[uuid].color)
-            :setMatrix(rotateSpriteAroundPos(0, -onMapPos, 8/128 * SCALE))
+         if inRange then
+            indicatorTasks[uuid] = mdl:newSprite(v:getUUID())
+                  :setTexture(indicatorTexture, 128, 128)
+                  :region(8, 8)
+                  :setUVPixels(0, 0)
+                  :setColor(colorCache[uuid].color)
+                  :setMatrix(rotateSpriteAroundPos(rot, -onMapPos, (mc21 and 1 or 8/128) * SCALE))
+         else
+            indicatorTasks[uuid] = mdl:newSprite(v:getUUID())
+                  :setTexture(indicatorTexture, 128, 128)
+                  :setUVPixels(48, 0)
+                  :region(8, 8)
+                  :setColor(colorCache[uuid].color)
+                  :setMatrix(rotateSpriteAroundPos(0, -onMapPos, (mc21 and 1 or 8/128) * SCALE))
+         end
       end
    end
 end
