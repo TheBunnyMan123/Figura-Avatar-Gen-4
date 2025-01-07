@@ -4,12 +4,13 @@ local TextComponents = require("libs.TheKillerBunny.TextComponents")
 local STEP = 1 -- How many blocks to step
 local SIZE = vec(68, 68) -- How big the map is
 local POS = vec(3, 3) -- Top left corner of the map
-local TIME_PER_FRAME = 6 -- How long to spend calculating the map per frame (in milliseconds)
+local HEAVY_OPTIMIZATION = false -- Heavily optimize the color generation - This may come with appearance tradeoffs
+local TIME_PER_FRAME = 10 -- How long to spend calculating the map per frame (in milliseconds)
 local HALF_SIZE = SIZE / 2
 local SCALE = 1.5 -- Map scale
 local SKY_COLOR = vec(0.36862, 0.64705, 1, 0.5)
 local SHADE_LAVA = true -- Minecraft maps do not do this but it makes it look so much better
-local CACHE_AGE = 40 -- The amount of time a color can stay in the cache
+local CACHE_AGE = 1000 * 10 -- The amount of time a color can stay in the cache
 local WATER_BASE = 1.25 -- The base of the water multiplier
 local WATER_DIVISOR = 11.5 -- The amount to divide the water multiplier by
 --}}
@@ -63,7 +64,7 @@ local function getWaterMultiplier(depthFactor, x, y)
    local xEven = x % 2 == 0
    local yEven = y % 2 == 0
 
-   if depthFactor % 2 ~= 0 then
+   if (depthFactor % 2 ~= 0) or HEAVY_OPTIMIZATION then
       return WATER_BASE - depthFactor / WATER_DIVISOR
    end
 
@@ -79,6 +80,9 @@ local function getColor(x, y, noiter)
    y = math.floor(y)
 
    local minHeight, height = world.getBuildHeight()
+   local maxHeight = height
+
+   height = raycast:block(x + 0.5, maxHeight, y + 0.5, x + 0.5, minHeight, y + 0.5, "OUTLINE", "ANY"):getPos().y
   
    local color
    local loop = true
@@ -98,33 +102,34 @@ local function getColor(x, y, noiter)
          end
 
          local water = water_blocks[block:getID()]
-         local isWater = water
          local oldHeight = height
 
-         local stack = 0
-         while water and stack < 100 do
-            stack = stack + 1
-            water = false
-            height = height - 1
-            water = water_blocks[world.getBlockState(x, height, y):getID()]
+         if water then
+            height = raycast:block(x, height, y, x, minHeight, y, "COLLIDER", "NONE"):getPos().y
          end
 
          local depth = oldHeight - height
 
-         if isWater then
+         if water then
             height = height + 1
 
             local depthFactor = math.clamp(math.floor(depth / 2), 1, 5) 
             color = color * getWaterMultiplier(depthFactor, x, y)
          end
 
-         local bright = world.getBlockState(x, height, y - 1):isAir() and not isWater
-         local dark, heightOfColor = getColor(x, y - 1, true)
-         dark = dark ~= vec(0, 0, 0, 0) and not isWater
+         local bright = world.getBlockState(x, height, y - 1):isAir() and not water
+         local dark, darkHeight
+         if HEAVY_OPTIMIZATION then
+            dark = raycast:block(x, height + 1, y - 1, x, maxHeight, y - 1, "VISUAL", "ANY")
+            dark = not dark:isAir()
+         else
+            dark, darkHeight = getColor(x, y - 1, true)
 
-         if heightOfColor <= height then
-            dark = false
+            dark = dark ~= SKY_COLOR
+            dark = dark and (darkHeight > height)
          end
+         
+         dark = dark and not water
 
          if not bright and not dark then
             color = color / vec(1.15, 1.15, 1.15)
@@ -272,10 +277,9 @@ end
 local x = 1
 local y = 1
 on["render"] = function()
-   local pPos = player:getPos()
-
    local time = client.getSystemTime()
-
+   local pPos = player:getPos():floor()
+   
    while time >= (client.getSystemTime() - TIME_PER_FRAME) do
       x = x + 1
       if x > SIZE.x then
