@@ -1,8 +1,13 @@
 local TextComponents = require("libs.TheKillerBunny.TextComponents")
 
+local goofy = goofy
+if not goofy then
+   goofy = {getAvatarColor = function() end}
+end
+
 --{{ options
 local STEP = 1 -- How many blocks to step
-local SIZE = vec(68, 68) -- How big the map is
+local SIZE = vec(64, 64) -- How big the map is
 local POS = vec(3, 3) -- Top left corner of the map
 local HEAVY_OPTIMIZATION = false -- Heavily optimize the color generation - This may come with appearance tradeoffs
 local TIME_PER_FRAME = 10 -- How long to spend calculating the map per frame (in milliseconds)
@@ -33,11 +38,13 @@ local white = textures:newTexture("TKBunny$Map$White", 1, 1)
 white:setPixel(0, 0, vec(1, 1, 1, 1))
 
 local mdl = models:newPart("TKBunny$Map", "HUD")
-local map = textures:newTexture("TKBunny$Map", SIZE:unpack())
-local mapPart = mdl:newSprite("map")
+local map = textures:newTexture("TKBunny$Map", (SIZE + 4):unpack())
+mdl:newSprite("map")
       :setTexture(map, SIZE:unpack())
       :setScale(SCALE)
       :setPos(-POS.xy_ * SCALE)
+
+map:fill(0, 0, SIZE.x + 4, SIZE.y + 4, 0, 0, 0)
 
 ---@type SpriteTask[][]
 local tasks = {}
@@ -294,7 +301,7 @@ on["render"] = function()
 
       tasks[x] = tasks[x] or {}
 
-      map:setPixel(x - 1, y - 1, color)
+      map:setPixel(x + 1, y + 1, color)
    end
    map:update()
 end
