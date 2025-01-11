@@ -1,12 +1,67 @@
 local TextComponents = require("libs.TheKillerBunny.TextComponents")
 
+local waypoints = {}
+
+function events.CHAT_SEND_MESSAGE(msg)
+   local command, arg1, arg2, arg3 = msg:match("^%.waypoint (%S+) ?(%S*) ?(%S*) ?(%S*)")
+
+   if arg1 == "" then
+      arg1 = nil
+   end
+   if arg2 == "" then
+      arg2 = nil
+   end
+   if arg3 == "" then
+      arg3 = nil
+   end
+
+   local serverData = client.getServerData()
+   local server = serverData.ip or serverData.name
+   local dimension = world.getDimension()
+
+   waypoints[dimension] = waypoints[dimension] or {}
+   if command == "add" then
+      waypoints[dimension][arg1] = {
+         color = arg2 or "#ffffff",
+         pos = {player:getPos():floor():unpack()},
+         icon = arg3
+      }
+      file:writeString("waypoints/" .. server:gsub("[/\\]", "_") .. ".json", toJson(waypoints), "utf8")
+      return ""
+   elseif command == "remove" then
+      waypoints[dimension][arg1] = nil
+      file:writeString("waypoints/" .. server:gsub("[/\\]", "_") .. ".json", toJson(waypoints), "utf8")
+      return ""
+   end
+
+   if command then
+      return ""
+   end
+
+   return msg
+end
+
+on[{"tick", "modulo:20"}] = function()
+   file:mkdir("waypoints")
+   local serverData = client.getServerData()
+   local server = serverData.ip or serverData.name
+
+   if waypoints.server ~= server then
+      if not file:exists("waypoints/" .. server:gsub("[/\\]", "_") .. ".json") then
+         file:writeString("waypoints/" .. server:gsub("[/\\]", "_") .. ".json", toJson{server = server}, "utf8")
+      end
+
+      waypoints = parseJson(file:readString("waypoints/" .. server:gsub("[/\\]", "_") .. ".json", "utf8"))
+   end
+end
+
 local goofy = goofy
 if not goofy then
    goofy = {getAvatarColor = function() end}
 end
 
 --{{ options
-local STEP = 1 -- How many blocks to step
+   local STEP = 1 -- How many blocks to step
 local SIZE = vec(64, 64) -- How big the map is
 local POS = vec(3, 3) -- Top left corner of the map
 local HEAVY_OPTIMIZATION = false -- Heavily optimize the color generation - This may come with appearance tradeoffs
@@ -46,7 +101,7 @@ mdl:newSprite("map")
 
 map:fill(0, 0, SIZE.x + 4, SIZE.y + 4, 0, 0, 0)
 
----@type SpriteTask[][]
+---@type RenderTask[][]
 local tasks = {}
 
 local randomCache = {}
@@ -213,22 +268,55 @@ end
 local indicatorTexture = textures:fromVanilla("map_indicators", "minecraft:textures/map/map_icons.png")
 local mc21PlayerIndicator = textures:fromVanilla("map_indicator_player", "minecraft:textures/map/decorations/player.png")
 local mc21PlayerOffMapIndicator = textures:fromVanilla("map_indicator_player_off_map", "minecraft:textures/map/decorations/player_off_map.png")
+local mc21BannerIndicator = textures:fromVanilla("map_indicator_banner", "minecraft:textures/map/decorations/white_banner.png")
 
-local indicatorTasks = {}
+local inMdl = mdl:newPart("indicators")
 on[{"tick", "modulo:4"}] = function(tick)
-   for _, v in pairs(indicatorTasks) do
+   for _, v in pairs(inMdl:getTask()) do
       v:remove()
    end
 
    local pPos = player:getPos()
+   local minPos = pPos - HALF_SIZE.xxy
+   local maxPos = pPos + HALF_SIZE.xxy
 
-   for _, v in pairs(world.getPlayers()) do
-      local minPos = pPos - HALF_SIZE.xxy + 2
-      local maxPos = pPos + HALF_SIZE.xxy + 2
+   if waypoints then
+      for name, data in pairs(waypoints[world.getDimension()] or {}) do
+         local wayPos = vec(table.unpack(data.pos))
 
-      minPos = minPos - (1 * SCALE)
-      maxPos = maxPos - (1 * SCALE)
-      
+         local _, clamped = isInRange(wayPos.x_z, minPos.x_z + 2, maxPos.x_z)
+         local index = "§§banner_" .. name
+
+         local onMapPos = clamped.xz - pPos.xz + HALF_SIZE
+         onMapPos = onMapPos * SCALE
+         onMapPos = onMapPos + POS
+         onMapPos = onMapPos.xy_
+         onMapPos.z = 50
+
+         if mc21 then
+            inMdl:newSprite(index)
+                  :setTexture(mc21BannerIndicator, mc21BannerIndicator:getDimensions():unpack())
+                  :setUVPixels(72, 0)
+                  :setColor(vectors.hexToRGB(data.color))
+                  :setMatrix(rotateSpriteAroundPos(0, -onMapPos, SCALE))
+         else
+            inMdl:newSprite(index)
+                  :setTexture(indicatorTexture, indicatorTexture:getDimensions():unpack())
+                  :setUVPixels(80, 0)
+                  :region(8, 8)
+                  :setColor(vectors.hexToRGB(data.color))
+                  :setMatrix(rotateSpriteAroundPos(0, -onMapPos, 8/128 * SCALE))
+         end
+
+         inMdl:newText(index .. "_text")
+               :setAlignment("CENTER")
+               :setPos(-onMapPos - vec(0, 8, 0))
+               :setText(name)
+               :setOutline(true)
+      end
+   end
+
+   for _, v in pairs(world.getPlayers()) do 
       local inRange, clamped = isInRange(v:getPos(), minPos, maxPos)
       local uuid = v:getUUID()
 
@@ -247,36 +335,90 @@ on[{"tick", "modulo:4"}] = function(tick)
 
       rot = rot - 180
 
-      if client.compareVersions(client.getVersion(), "1.21") >= 0 then
+      if mc21 then
          if inRange then
-            indicatorTasks[uuid] = mdl:newSprite(v:getUUID())
+            inMdl:newSprite(v:getUUID())
                   :setTexture(mc21PlayerIndicator, 8, 8)
                   :region(8, 8)
                   :setColor(colorCache[uuid].color)
-                  :setMatrix(rotateSpriteAroundPos(rot, -onMapPos, (mc21 and 1 or 8/128) * SCALE))
+                  :setMatrix(rotateSpriteAroundPos(rot, -onMapPos, SCALE))
          else
-            indicatorTasks[uuid] = mdl:newSprite(v:getUUID())
+            inMdl:newSprite(v:getUUID())
                   :setTexture(mc21PlayerOffMapIndicator, 8, 8)
                   :region(8, 8)
                   :setColor(colorCache[uuid].color)
-                  :setMatrix(rotateSpriteAroundPos(0, -onMapPos, (mc21 and 1 or 8/128) * SCALE))
+                  :setMatrix(rotateSpriteAroundPos(0, -onMapPos, SCALE))
          end
       else
          if inRange then
-            indicatorTasks[uuid] = mdl:newSprite(v:getUUID())
+            inMdl:newSprite(v:getUUID())
                   :setTexture(indicatorTexture, 128, 128)
                   :region(8, 8)
                   :setUVPixels(0, 0)
                   :setColor(colorCache[uuid].color)
-                  :setMatrix(rotateSpriteAroundPos(rot, -onMapPos, (mc21 and 1 or 8/128) * SCALE))
+                  :setMatrix(rotateSpriteAroundPos(rot, -onMapPos, 8/128 * SCALE))
          else
-            indicatorTasks[uuid] = mdl:newSprite(v:getUUID())
+            inMdl:newSprite(v:getUUID())
                   :setTexture(indicatorTexture, 128, 128)
                   :setUVPixels(48, 0)
                   :region(8, 8)
                   :setColor(colorCache[uuid].color)
-                  :setMatrix(rotateSpriteAroundPos(0, -onMapPos, (mc21 and 1 or 8/128) * SCALE))
+                  :setMatrix(rotateSpriteAroundPos(0, -onMapPos, 8/128 * SCALE))
          end
+      end
+   end
+end
+
+local function isPosVisible(pos)
+   return vectors.toCameraSpace(pos).z < 0
+end
+
+local waypointTasks = {}
+on["world_render"] = function(delta)
+   for _, v in pairs(waypointTasks) do
+      v:remove()
+   end
+   if not player:isLoaded() then return end
+   local dimension = world.getDimension()
+
+   for name, data in pairs(waypoints[dimension] or {}) do
+      local wayPos = vec(table.unpack(data.pos))
+      if isPosVisible(wayPos + 0.5) then
+         local screenPos = math.map(vectors.worldToScreenSpace(wayPos + 0.5).xy, vec(-1, -1), vec(1, 1), vec(0, 0), -client.getScaledWindowSize())
+         local dist = (wayPos - player:getPos()):length()
+
+         if dist >= 1000000 then
+            dist = math.floor(dist / 1000000) .. "Mm"
+         elseif dist >= 1000 then
+            dist = math.floor(dist / 1000) .. "km"
+         else
+            dist = math.floor(dist) .. "m"
+         end
+
+         local offset = client.getTextWidth(data.icon or "◆") - 7
+         waypointTasks[name] = mdl:newText(name .. "_icon")
+               :setText(toJson {
+                  text = data.icon or "◆",
+                  color = data.color
+               })
+               :setPos(screenPos.xy_ + vec(0, 9, 0))
+               :setScale(2)
+               :setAlignment("CENTER")
+               :setOutline(true)
+         waypointTasks[name .. "_name"] = mdl:newText(name .. "_name")
+               :setText(toJson {
+                  text = name,
+               })
+               :setPos(screenPos.xy_ + vec(-9 - offset, 4.5, 10000))
+               :setAlignment("LEFT")
+               :setOutline(true)
+         waypointTasks[name .. "_dist"] = mdl:newText(name .. "_dist")
+               :setText(toJson {
+                  text = dist,
+               })
+               :setPos(screenPos.xy_ + vec(9, 4.5, 0))
+               :setAlignment("RIGHT")
+               :setOutline(true)
       end
    end
 end
