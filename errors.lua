@@ -181,7 +181,7 @@ function _G.tracebackError(msg)
    local script = oldSplit[1]:gsub("/", "."):gsub(":.*$", "")
    local line = tonumber(oldSplit[1]:match(":([0-9]+)%S"))
    local code = avatar:getNBT().scripts[script]
-   if code and math.max(table.unpack(code)) > 255 then
+   if code then
       if collection then
          collection:map(code, function(val)
             return val % 256

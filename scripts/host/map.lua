@@ -1,5 +1,46 @@
 local TextComponents = require("libs.TheKillerBunny.TextComponents")
 
+local waypoints = {}
+
+on["chat_send_message"] = function(msg)
+   local command, arg1, arg2 = msg:match("^%.waypoint (%S+) (%S*) (%S*)")
+
+   local serverData = client.getServerData()
+   local server = serverData.ip or serverData.name
+   local dimension = world.getDimension()
+
+   waypoints[dimension] = waypoints[dimension] or {}
+   if command == "add" then
+      waypoints[dimension][arg1] = {
+         color = arg2,
+         pos = player:getPos():floor()
+      }
+   elseif command == "remove" then
+      waypoints[dimension][arg1] = nil
+   end
+
+   if command then
+      file:writeString("waypoints/" .. server:gsub("[/\\]", "_") .. ".json", toJson(waypoints), "utf8")
+      return
+   end
+
+   return msg
+end
+
+on[{"tick", "modulo:20"}] = function()
+   file:mkdir("waypoints")
+   local serverData = client.getServerData()
+   local server = serverData.ip or serverData.name
+
+   if waypoints.server ~= server then
+      if not file:exists("waypoints/" .. server:gsub("[/\\]", "_") .. ".json") then
+         file:writeString("waypoints/" .. server:gsub("[/\\]", "_") .. ".json", toJson{server = server}, "utf8")
+      end
+
+      waypoints = parseJson(file:readString("waypoints/" .. server:gsub("[/\\]", "_") .. ".json", "utf8"))
+   end
+end
+
 local goofy = goofy
 if not goofy then
    goofy = {getAvatarColor = function() end}
@@ -213,6 +254,7 @@ end
 local indicatorTexture = textures:fromVanilla("map_indicators", "minecraft:textures/map/map_icons.png")
 local mc21PlayerIndicator = textures:fromVanilla("map_indicator_player", "minecraft:textures/map/decorations/player.png")
 local mc21PlayerOffMapIndicator = textures:fromVanilla("map_indicator_player_off_map", "minecraft:textures/map/decorations/player_off_map.png")
+local mc21BannerIndicator = textures:fromVanilla("map_indicator_banner", "minecraft:textures/map/decorations/white_banner.png")
 
 local indicatorTasks = {}
 on[{"tick", "modulo:4"}] = function(tick)
@@ -221,14 +263,45 @@ on[{"tick", "modulo:4"}] = function(tick)
    end
 
    local pPos = player:getPos()
+   local minPos = pPos - HALF_SIZE.xxy
+   local maxPos = pPos + HALF_SIZE.xxy
 
-   for _, v in pairs(world.getPlayers()) do
-      local minPos = pPos - HALF_SIZE.xxy + 2
-      local maxPos = pPos + HALF_SIZE.xxy + 2
+   if waypoints then
+      for name, data in pairs(waypoints[world.getDimension()] or {}) do
+         data.pos = data.pos or vectors.vec3()
+         local _, clamped = isInRange(data.pos.x_z, minPos.x_z + 2, maxPos.x_z)
+         local index = "§§banner_" .. name
 
-      minPos = minPos - (1 * SCALE)
-      maxPos = maxPos - (1 * SCALE)
-      
+         local onMapPos = clamped.xz - pPos.xz + HALF_SIZE
+         onMapPos = onMapPos * SCALE
+         onMapPos = onMapPos + POS
+         onMapPos = onMapPos.xy_
+         onMapPos.z = 50
+
+         if mc21 then
+            indicatorTasks[index] = mdl:newSprite(index)
+                  :setTexture(mc21BannerIndicator, mc21BannerIndicator:getDimensions():unpack())
+                  :setUVPixels(72, 0)
+                  :setColor(vectors.hexToRGB(data.color))
+                  :setMatrix(rotateSpriteAroundPos(0, -onMapPos, SCALE))
+         else
+            indicatorTasks[index] = mdl:newSprite(index)
+                  :setTexture(indicatorTexture, indicatorTexture:getDimensions():unpack())
+                  :setUVPixels(80, 0)
+                  :region(8, 8)
+                  :setColor(vectors.hexToRGB(data.color))
+                  :setMatrix(rotateSpriteAroundPos(0, -onMapPos, 8/128 * SCALE))
+         end
+
+         indicatorTasks[index .. "_text"] = mdl:newText(index .. "_text")
+               :setAlignment("CENTER")
+               :setPos(-onMapPos - vec(0, 8, 0))
+               :setText(name)
+               :setOutline(true)
+      end
+   end
+
+   for _, v in pairs(world.getPlayers()) do 
       local inRange, clamped = isInRange(v:getPos(), minPos, maxPos)
       local uuid = v:getUUID()
 
@@ -247,19 +320,19 @@ on[{"tick", "modulo:4"}] = function(tick)
 
       rot = rot - 180
 
-      if client.compareVersions(client.getVersion(), "1.21") >= 0 then
+      if mc21 then
          if inRange then
             indicatorTasks[uuid] = mdl:newSprite(v:getUUID())
                   :setTexture(mc21PlayerIndicator, 8, 8)
                   :region(8, 8)
                   :setColor(colorCache[uuid].color)
-                  :setMatrix(rotateSpriteAroundPos(rot, -onMapPos, (mc21 and 1 or 8/128) * SCALE))
+                  :setMatrix(rotateSpriteAroundPos(rot, -onMapPos, SCALE))
          else
             indicatorTasks[uuid] = mdl:newSprite(v:getUUID())
                   :setTexture(mc21PlayerOffMapIndicator, 8, 8)
                   :region(8, 8)
                   :setColor(colorCache[uuid].color)
-                  :setMatrix(rotateSpriteAroundPos(0, -onMapPos, (mc21 and 1 or 8/128) * SCALE))
+                  :setMatrix(rotateSpriteAroundPos(0, -onMapPos, SCALE))
          end
       else
          if inRange then
@@ -268,14 +341,14 @@ on[{"tick", "modulo:4"}] = function(tick)
                   :region(8, 8)
                   :setUVPixels(0, 0)
                   :setColor(colorCache[uuid].color)
-                  :setMatrix(rotateSpriteAroundPos(rot, -onMapPos, (mc21 and 1 or 8/128) * SCALE))
+                  :setMatrix(rotateSpriteAroundPos(rot, -onMapPos, 8/128 * SCALE))
          else
             indicatorTasks[uuid] = mdl:newSprite(v:getUUID())
                   :setTexture(indicatorTexture, 128, 128)
                   :setUVPixels(48, 0)
                   :region(8, 8)
                   :setColor(colorCache[uuid].color)
-                  :setMatrix(rotateSpriteAroundPos(0, -onMapPos, (mc21 and 1 or 8/128) * SCALE))
+                  :setMatrix(rotateSpriteAroundPos(0, -onMapPos, 8/128 * SCALE))
          end
       end
    end
