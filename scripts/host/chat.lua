@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
-if client.compareVersions("1.21.4", client.getVersion()) < 0 then
+if client.compareVersions("1.21", client.getVersion()) < 0 then
    return
 end
 
@@ -706,7 +706,7 @@ BunnyChatUtils:register(function(_, chatJson, rawText)
                   bold = false,
                },
                {
-                  text = " --> ",
+                  text = " → ",
                   color = "gray",
                   bold = true,
                },
@@ -763,7 +763,7 @@ BunnyChatUtils:register(function(_, chatJson, rawText)
                   bold = false,
                },
                {
-                  text = " --> ",
+                  text = " → ",
                   color = "gray",
                   bold = true,
                },

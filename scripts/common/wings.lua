@@ -71,7 +71,9 @@ function events.TICK()
 
       if item:getID() == "minecraft:firework_rocket" then
          local tag = item:getTag()
-         flightDuration = tag.Fireworks.Flight or tag["minecraft:fireworks"]["flight_duration"]
+         
+         local nbt = tag.Fireworks or tag["minecraft:fireworks"]
+         flightDuration = nbt.Flight or nbt["flight_duration"]
          
          listeningForSound = 100
       end
