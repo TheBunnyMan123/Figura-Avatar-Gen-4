@@ -13,7 +13,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 --]]
-local TextComponents = require("libs.TheKillerBunny.TextComponents")
+local ActionWheelPlusPlus = require("libs.TheKillerBunny.ActionWheelPlusPlus")
+
+Wheel = {
+   toggles = ActionWheelPlusPlus:newPage("Toggles", "minecraft:lever")
+}
 
 function string.split(str, on)
     on = on or " "
