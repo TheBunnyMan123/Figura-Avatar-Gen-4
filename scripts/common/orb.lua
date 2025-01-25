@@ -19,9 +19,9 @@ end
 local goodBlocks = {}
 
 for _, block in pairs(client.getRegistry("minecraft:block")) do
-   local state = world.newBlock(block, 0, 0, 0)
+   local succ, state = pcall(world.newBlock, block, 0, 0, 0)
 
-   if state:isSolidBlock() and not state:isTranslucent() then
+   if succ and state:isSolidBlock() and not state:isTranslucent() then
       table.insert(goodBlocks, block)
    end
 end

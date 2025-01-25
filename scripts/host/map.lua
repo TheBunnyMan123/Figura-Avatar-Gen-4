@@ -370,7 +370,9 @@ on[{"tick", "modulo:4"}] = function(tick)
 end
 
 local function isPosVisible(pos)
-   return vectors.toCameraSpace(pos).z < 0
+   local z = vectors.toCameraSpace(pos).z
+
+   return (mc21 and z < 0) or (not mc21 and z > 0)
 end
 
 local waypointTasks = {}
