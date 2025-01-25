@@ -2129,19 +2129,6 @@
 							"children": []
 						},
 						{
-							"name": "HelmetItemPivot",
-							"origin": [0, 24, 0],
-							"color": 0,
-							"uuid": "49076a1d-5198-141e-3e6b-8a0c5be11918",
-							"export": true,
-							"mirror_uv": false,
-							"isOpen": false,
-							"locked": false,
-							"visibility": true,
-							"autouv": 0,
-							"children": []
-						},
-						{
 							"name": "HelmetPivot",
 							"origin": [0, 24, 0],
 							"color": 0,
@@ -2450,8 +2437,8 @@
 	],
 	"textures": [
 		{
-			"path": "/home/bunny/Sync/figura/avatars/Figura Avatar Gen 4/textures/Bunny.png",
-			"name": "Bunny.png",
+			"path": "/home/bunny/Sync/figura/avatars/Figura Avatar Gen 4/textures/model.png",
+			"name": "model.png",
 			"folder": "",
 			"namespace": "",
 			"id": "2",
@@ -2487,7 +2474,7 @@
 					"data_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAARzQklUCAgICHwIZIgAAAOySURBVHhe7Vq7jhMxFPXwyIYkApE0iCISbSR6voEfgYaGX0PQUG23HcVKkahAKRApEgRKQjY8hjlmb+R4nVzb1wObmXGz69fN9fF9HNuTjcfjXBWl1+vhz7YsFoudemz/aDTKdgQFViaTSX73vKe+PV6o4XCoZbnaAsVuh2cAAIvrdrs7MpbLpSIQJP3XHgCgSYvv9/sahPl8rv8CBBRJP+1a7A7NZrP85lmmfj3J1WAw0BbgaouVn0EYJtPiSRCBQPXYflI6VsG8KF/ffFH3nt5XWVEgx9UWK18DYC/OBUJtAYAb1MYFYGooMDdygel0qjNEbJA8iiBIgc4MghQAXZnAzBDkLiZIZv+1B6BsHmACZAYqApYDSMoDKGN8evRZ0W9hzQ8/PFBoK50HYNGHXIgDQJoGuflZ2TyA4xE+PAFpj1IgWZGrbV8qBAh2Oqa20nkAxyOkPCE2/9M8Lx5QKAnysfNb4CQFirqN4xGH+hsALumtdCdj5we5gIsncCbO9f93C0AQPMQDaAEgQi6eIO33CYKxu+sz78pZnY7HmGySIKpzacvkFcQeUxInqX42KFcAgEUg6KFQkDPr3I6Z9wvtdlvLWa/X+mhts0pXPwewVL8GAAuBxgXIZ30CRsgY7g7RlhU63lcXzqW2Z4F9QQ/tpJwrKO7r547P9u+FjvfVlwXAPAvYd4DSuhnkoDAnL3Q8Jw/9XNDWRMj+YUmdbpAgo9PpaEtdrVbbTICdtqM/tfmMh7wQ/TiitXMWoFsg+3Y4tA4lD90h2vJCx4fowwJQ7FhuIg9lJHXkfHP3KViRFbgsI2R8qH6FdR18mMlqD4B5LV5LF6h9EKx9GuROV5UnQrWnwr6cuqrjRB8vVAGUBoAq7KJkDY0FSNCrwtzGAqqwi5I1NBYgQa8KcxsLqMIuStbQWIAEvSrMbSygCrsoWUNyC+BumLinKul8Bgz9Mci7V8/UrRuZ+vk7V8kBkL7fS+f7AHD++rlqtW6rzeZHvQAoFq4tADtfmgVITVg6n4sHhfnnWDwBIXaBsi5VuYVQPxdTbDmwApg/ShIX4HYMPxTzfQHm+XyPEArA+7cv8pNLAC5SxIAyH1ZSvP/bFgAAOndOdPPq+4U8CKZ+WoNiKd///wkAIe/1UCjleO793wVAUhdI/bwOhUO+T+De/0sPgscGQPI0WMb3BSEuEuoCAKDTbv0NgutNPYMg8j8K+ICYCB1bGkxuAcdGhLDzdCbA/2ILODYqTFnh4+lLfTD6A2MkYCC3KcvFAAAAAElFTkSuQmCC"
 				}
 			],
-			"relative_path": "../textures/Bunny.png",
+			"relative_path": "../textures/model.png",
 			"source": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAARzQklUCAgICHwIZIgAAAOySURBVHhe7Vq7jhMxFPXwyIYkApE0iCISbSR6voEfgYaGX0PQUG23HcVKkahAKRApEgRKQjY8hjlmb+R4nVzb1wObmXGz69fN9fF9HNuTjcfjXBWl1+vhz7YsFoudemz/aDTKdgQFViaTSX73vKe+PV6o4XCoZbnaAsVuh2cAAIvrdrs7MpbLpSIQJP3XHgCgSYvv9/sahPl8rv8CBBRJP+1a7A7NZrP85lmmfj3J1WAw0BbgaouVn0EYJtPiSRCBQPXYflI6VsG8KF/ffFH3nt5XWVEgx9UWK18DYC/OBUJtAYAb1MYFYGooMDdygel0qjNEbJA8iiBIgc4MghQAXZnAzBDkLiZIZv+1B6BsHmACZAYqApYDSMoDKGN8evRZ0W9hzQ8/PFBoK50HYNGHXIgDQJoGuflZ2TyA4xE+PAFpj1IgWZGrbV8qBAh2Oqa20nkAxyOkPCE2/9M8Lx5QKAnysfNb4CQFirqN4xGH+hsALumtdCdj5we5gIsncCbO9f93C0AQPMQDaAEgQi6eIO33CYKxu+sz78pZnY7HmGySIKpzacvkFcQeUxInqX42KFcAgEUg6KFQkDPr3I6Z9wvtdlvLWa/X+mhts0pXPwewVL8GAAuBxgXIZ30CRsgY7g7RlhU63lcXzqW2Z4F9QQ/tpJwrKO7r547P9u+FjvfVlwXAPAvYd4DSuhnkoDAnL3Q8Jw/9XNDWRMj+YUmdbpAgo9PpaEtdrVbbTICdtqM/tfmMh7wQ/TiitXMWoFsg+3Y4tA4lD90h2vJCx4fowwJQ7FhuIg9lJHXkfHP3KViRFbgsI2R8qH6FdR18mMlqD4B5LV5LF6h9EKx9GuROV5UnQrWnwr6cuqrjRB8vVAGUBoAq7KJkDY0FSNCrwtzGAqqwi5I1NBYgQa8KcxsLqMIuStbQWIAEvSrMbSygCrsoWUNyC+BumLinKul8Bgz9Mci7V8/UrRuZ+vk7V8kBkL7fS+f7AHD++rlqtW6rzeZHvQAoFq4tADtfmgVITVg6n4sHhfnnWDwBIXaBsi5VuYVQPxdTbDmwApg/ShIX4HYMPxTzfQHm+XyPEArA+7cv8pNLAC5SxIAyH1ZSvP/bFgAAOndOdPPq+4U8CKZ+WoNiKd///wkAIe/1UCjleO793wVAUhdI/bwOhUO+T+De/0sPgscGQPI0WMb3BSEuEuoCAKDTbv0NgutNPYMg8j8K+ICYCB1bGkxuAcdGhLDzdCbA/2ILODYqTFnh4+lLfTD6A2MkYCC3KcvFAAAAAElFTkSuQmCC"
 		},
 		{
