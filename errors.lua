@@ -45,7 +45,7 @@ local figcolors = {
 }
 local styles = {
    default = component.newStyle(),
-   labelStyle = component.newStyle():setColor("#ff7b72"),
+   labelStyle = component.newStyle():setColor("#ff3640"),--:setColor("#ff7b72"),
    treeStyle = component.newStyle():setColor("#797979"),
    javaStyle = component.newStyle():setColor("#f89820"),
    softBlue = component.newStyle():setColor(vectors.hexToRGB(figcolors.SOFT_BLUE)),
@@ -61,16 +61,18 @@ local styles = {
    op = component.newStyle():setColor("#ffffff")
 }
 local components = {
-   treeComponent = component.newComponent("\n ↓ ", styles.treeStyle),
+   lineBegin = component.newComponent("\n| ", styles.treeStyle),
+   treeComponent = component.newComponent("\n| ", styles.treeStyle),
    javaComponent = component.newComponent("<Java", styles.treeStyle),
-   colon = component.newComponent(" :", styles.gray)
+   colon = component.newComponent(" : ", styles.gray)
 }
 
 local function lexCode(code)
-   local compose = component.newComponent("", styles.default)
+   code = code .. " "
+   local compose = component.newComponent("| ", styles.comment)
    for _, v in pairs(lex(code)) do
       if v[1] == "comment" or v[1] == "ws" or v[1] == "mlcom" then
-         compose:append(component.newComponent(v[2], styles.comment))
+         compose:append(component.newComponent(v[2]:gsub("\n", "\n| "), styles.comment))
       elseif v[1] == "word" or v[1] == "number" then
          if v[1] == "true" or v[1] == "false" then
             compose:append(component.newComponent(v[2], styles.boolean))
@@ -99,218 +101,82 @@ local function splitStr(str, on)
     return result
 end
 
-local errored = false
-function _G.tracebackError(msg)
-   local split = splitStr(msg:gsub("\t", ""), "\n")
-   local compose = component.newComponent("[Traceback]", styles.labelStyle)
+local betterErrors = require("libs.TheKillerBunny.BetterErrors")
 
-   local longestLineNumCount = 1
-   msg:gsub(":[0-9]-:", function(str)
-      local num = str:gsub(":", "")
-      if longestLineNumCount < #num then
-         longestLineNumCount = #num
-      end
-   end)
-
-   table.remove(split, 2)
-   local message = split[1]
-   table.remove(split, 1)
-
-   local oldSplit = {}
-   for k, v in pairs(split) do
-      oldSplit[k] = v
+betterErrors.setFunc(function (script, reason, stacktrace, code, username, line)
+   local oldtrace = stacktrace
+   stacktrace = {}
+   for i = #oldtrace, 1, -1 do
+      table.insert(stacktrace, oldtrace[i])
    end
 
-   local iter = 0
-   for i = #split, 1, -1 do
-      iter = iter + 1
-      split[iter] = oldSplit[i]
-   end
+   local compose = component.newComponent(username .. "'s error", styles.labelStyle)
+   compose:append(components.lineBegin)
+   compose:append(component.newComponent(reason:gsub("^.", string.upper), styles.error))
+   
+   compose:append(component.newComponent("\n\nStack traceback:", styles.labelStyle))
+   for _, v in pairs(stacktrace) do
+      compose:append(components.lineBegin)
+      compose:append(component.newComponent(tostring(v.line), styles.lineNumber))
+      compose:append(components.colon)
 
-   for _, v in pairs(split) do
-      local java = v:match("%S-.[Jj]ava.")
-
-      local splitTrace = splitStr(v, " ")
-      local path = splitStr(splitTrace[1], "/")
-      local linenum
-
-      path[#path] = path[#path]:gsub(":[0-9]+:", function(str)
-         linenum = tostring(str:match("[0-9]+"))
-         return ""
-      end)
-
-      local oldPath = {}
-      for l, w in pairs(path) do
-         oldPath[l] = w
-      end
-      iter = 0
-      for i = #oldPath, 1, -1 do
-         iter = iter + 1
-         path[i] = oldPath[iter]
-      end
-
-      linenum = linenum or "0"
-
-      compose:append(components.treeComponent)
-      if java then
-         compose:append(component.newComponent(("?"):rep(longestLineNumCount), styles.softBlue))
-         compose:append(components.colon)
-         compose:append(component.newComponent(v:gsub(".[jJ]ava.: in", ""), styles.javaStyle))
+      if v.script == "java/?" then
+         compose:append(component.newComponent("?", styles.javaStyle))
          compose:append(components.javaComponent)
       else
-         compose:append(component.newComponent(("0"):rep(math.clamp(longestLineNumCount - #linenum, 0, 5)) .. linenum, styles.lineNumber))
-         compose:append(components.colon)
-         compose:append(component.newComponent(" " .. path[1], styles.error))
-         table.remove(path, 1)
+         local splitScript = splitStr(v.script, "/")
+         for k = #splitScript, 1, -1 do
+            local w = splitScript[k]
 
-         for _, w in pairs(path) do
-            compose:append(component.newComponent("<" .. w, styles.treeStyle))
+            if k == #splitScript then
+               compose:append(component.newComponent(w, styles.error))
+            else
+               compose:append(component.newComponent("<" .. w, styles.treeStyle))
+            end
          end
-
-         compose:append(components.colon)
-         table.remove(splitTrace, 1)
-         compose:append(component.newComponent(table.concat(splitTrace, " "), styles.inBlock))
       end
 
+      compose:append(components.colon)
+      compose:append(component.newComponent(v.chunk, styles.inBlock))
    end
 
-   compose:append(component.newComponent("\n[Error]\n", styles.labelStyle))
-   compose:append(component.newComponent(" → ", styles.treeStyle))
-   compose:append(component.newComponent(message:gsub(".*:[0-9]+ ?", ""):gsub("^.", string.upper), styles.error))
-
-   local script = oldSplit[1]:gsub("/", "."):gsub(":.*$", "")
-   local line = tonumber(oldSplit[1]:match(":([0-9]+)%S"))
-   local code = avatar:getNBT().scripts[script]
-   if code then
+   local codeTbl = avatar:getNBT().scripts[script:gsub("/", ".")]
+   if codeTbl then
       if collection then
-         collection:map(code, function(val)
+         collection:map(codeTbl, function(val)
             return val % 256
          end)
       else
-         for k in pairs(code) do
-            code[k] = code[k] % 256
+         for k in pairs(codeTbl) do
+            codeTbl[k] = codeTbl[k] % 256
          end
       end
+
+      local oldCode = splitStr(string.char(table.unpack(codeTbl)), "\n")
+      code = ""
+
+      local readLines = {}
+      for i = -1, 1 do
+         local lineNum = math.clamp(line + i, 1, #oldCode)
+         if not readLines[lineNum] then
+            code = code .. oldCode[lineNum] .. "\n"
+         end
+         readLines[lineNum] = true
+      end
+      code = code:gsub("\n$", "")
    end
 
    if not code then
       return compose:toJson()
-   else
-      code = string.char(table.unpack(code))
    end
+   
+   compose:append(component.newComponent("\n\nCode:\n", styles.labelStyle))
+   code = lexCode(code)
 
-   local oldcode = splitStr(code, "\n")
-   code = {}
-   local readlines = {}
-   for i = -5, 5 do
-      if not readlines[math.clamp(line + i, 1, #oldcode)] then
-         table.insert(code, oldcode[math.clamp(line + i, 1, #oldcode)])
-         readlines[math.clamp(line + i, 1, #oldcode)] = true
-      end
-   end
-   code = table.concat(code, "\n")
-
-   compose:append(component.newComponent("\n[Code]\n", styles.labelStyle))
-   compose:append(lexCode(code))
+   compose:append(code)
 
    return compose:toJson()
-end
+end)
 
-local function newError(msg)
-    if errored then return "" end
-    errored = true
-    local err = tracebackError(msg)
-
-    logJson(err)
-
-    for _, v in pairs(events:getEvents()) do
-      v:clear()
-    end
-
-    err = err
-
-    ---@type TextJsonComponent
-    local newNameplate = {
-      {
-        text = "TheKillerBunny ",
-        color = "white"
-      },
-      {
-        text = "❌",
-        color = "#FF0000",
-        bold = true,
-        hoverEvent = {
-          action = "show_text",
-          value = parseJson(err)
-        }
-      },
-      {
-        text = "${badges}",
-        color = "white"
-      }
-    }
-
-    nameplate.ALL:setText(toJson(newNameplate))
-    nameplate.ENTITY:setOutline(true)
-
-    vanilla_model.ALL:setVisible(true)
-
-    local function remove(model)
-      for _, v in pairs(model:getChildren()) do
-        remove(v)
-      end
-      model:remove()
-    end
-    for _, v in pairs(models:getChildren()) do
-      remove(v)
-    end
-
-    sounds:stopSound()
-    particles:removeParticles()
-end
-
-if goofy then 
-  function events.ERROR(msg)
-    local err = tracebackError(msg)
-    logJson(err)
-    goofy:stopAvatar(err)
-    return true
-  end
-else
-  local _require = require
-  
-  function require(module)
-    local successAndArgs = table.pack(pcall(_require, module))
-    successAndArgs.n = nil
-    if not successAndArgs[1] then
-      newError(successAndArgs[2])
-    else
-      table.remove(successAndArgs, 1)
-      return table.unpack(successAndArgs)
-    end 
-  end
-
-  local _newindex = figuraMetatables.EventsAPI.__newindex
-  local _register = figuraMetatables.Event.__index.register
-  function figuraMetatables.EventsAPI.__newindex(self, event, func)
-    _newindex(self, event, function(...)
-      local success, error = pcall(func, ...)
-      if not success then
-        newError(error)
-      else
-        return error
-      end
-    end)
-  end
-  function figuraMetatables.Event.__index.register(self, func, name)
-    _register(self, function(...)
-      local success, error = pcall(func, ...)
-      if not success then
-        newError(error)
-      else
-        return error
-      end
-    end, name)
-  end
-end
+_G.tracebackError = betterErrors.tracebackError
 
