@@ -2086,6 +2086,19 @@
 					"visibility": true,
 					"autouv": 0,
 					"children": [
+						{
+							"name": "HeightPivot2",
+							"origin": [0, 28, 0],
+							"color": 0,
+							"uuid": "9a573c02-8215-0bb8-5eee-6add23e40ebf",
+							"export": true,
+							"mirror_uv": false,
+							"isOpen": true,
+							"locked": false,
+							"visibility": true,
+							"autouv": 0,
+							"children": []
+						},
 						"e84bb6f0-4e8e-3f47-cfb5-1f9e9602ba55",
 						{
 							"name": "HeightPivot",
