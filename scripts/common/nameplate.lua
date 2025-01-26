@@ -33,5 +33,4 @@ nameplate.ALL:setText(compose:toJson())
 nameplate.ENTITY
       :setBackgroundColor(0, 0, 0, 0)
       :setOutline(true)
-      :setPos(0, -0.1, 0)
 
