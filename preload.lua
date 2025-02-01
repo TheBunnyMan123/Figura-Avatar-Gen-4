@@ -15,5 +15,6 @@ limitations under the License.
 --]]
 
 require("errors")
+require("scriptAddons")
 require("load")
 

@@ -12,7 +12,7 @@ local tick = 0
 function events.tick()
   oldPos = newPos
   oldScale = newScale
-  tick = tick + 1
+  tick += 1
 
   local lookingAtSun = world.lookingAtSun()
 
