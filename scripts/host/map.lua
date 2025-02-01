@@ -1,45 +1,49 @@
 local TextComponents = require("libs.TheKillerBunny.TextComponents")
-
 local waypoints = {}
 
-function events.CHAT_SEND_MESSAGE(msg)
-   local command, arg1, arg2, arg3 = msg:match("^%.waypoint (%S+) ?(%S*) ?(%S*) ?(%S*)")
+local page = require("libs.TheKillerBunny.ActionWheelPlusPlus"):newPage("Waypoints", "minecraft:nether_star")
 
-   if arg1 == "" then
-      arg1 = nil
-   end
-   if arg2 == "" then
-      arg2 = nil
-   end
-   if arg3 == "" then
-      arg3 = nil
-   end
+local color = vec(1, 1, 1)
+local action = "add"
+local icon = nil
+local name = "name"
+page:newText("Name", "minecraft:name_tag", function(newName)
+   name = newName
+end, "name")
+page:newText("Icon", "minecraft:painting", function(newIcon)
+   icon = newIcon
 
+   if newIcon == "_" then
+      icon = nil
+   end
+end, "_")
+page:newColor("Color", "minecraft:white_dye", function(col)
+   color = col
+end, vec(1, 1, 1))
+page:newRadio("Action", "minecraft:writable_book", function(opt)
+   action = opt
+end, {"add", "remove"})
+page:newButton("Execute", "minecraft:command_block", function()
    local serverData = client.getServerData()
    local server = serverData.ip or serverData.name
    local dimension = world.getDimension()
 
    waypoints[dimension] = waypoints[dimension] or {}
-   if command == "add" then
-      waypoints[dimension][arg1] = {
-         color = arg2 or "#ffffff",
+
+   if action == "add" then
+      waypoints[dimension][name] = {
+         color = "#" .. vectors.rgbToHex(color),
          pos = {player:getPos():floor():unpack()},
-         icon = arg3
+         icon = icon
       }
-      file:writeString("waypoints/" .. server:gsub("[/\\]", "_") .. ".json", toJson(waypoints), "utf8")
-      return ""
-   elseif command == "remove" then
-      waypoints[dimension][arg1] = nil
-      file:writeString("waypoints/" .. server:gsub("[/\\]", "_") .. ".json", toJson(waypoints), "utf8")
-      return ""
-   end
 
-   if command then
-      return ""
-   end
+      file:writeString("waypoints/" .. server:gsub("[/\\]", "_") .. ".json", toJson(waypoints), "utf8")
+   elseif action == "remove" then
+      waypoints[dimension][name] = nil
 
-   return msg
-end
+      file:writeString("waypoints/" .. server:gsub("[/\\]", "_") .. ".json", toJson(waypoints), "utf8")
+   end
+end)
 
 on[{"tick", "modulo:20"}] = function()
    file:mkdir("waypoints")
@@ -61,7 +65,7 @@ if not goofy then
 end
 
 --{{ options
-   local STEP = 1 -- How many blocks to step
+local STEP = 1 -- How many blocks to step
 local SIZE = vec(64, 64) -- How big the map is
 local POS = vec(3, 3) -- Top left corner of the map
 local HEAVY_OPTIMIZATION = false -- Heavily optimize the color generation - This may come with appearance tradeoffs
@@ -98,6 +102,7 @@ mdl:newSprite("map")
       :setTexture(map, SIZE:unpack())
       :setScale(SCALE)
       :setPos(-POS.xy_ * SCALE)
+      :setLight(15)
 
 map:fill(0, 0, SIZE.x + 4, SIZE.y + 4, 0, 0, 0)
 
@@ -219,6 +224,7 @@ local infoTask = mdl:newText("info")
       :setPos(-POS.xy_ - HALF_SIZE.xy_:copy():mul(SCALE, SCALE * 2, 1):add(SCALE, 9, 0))
       :setAlignment("CENTER")
       :setOutline(true)
+      :setLight(15)
 
 on[{"tick", "player_moved:1"}] = function()
    local pPos = player:getPos():floor()
@@ -299,6 +305,7 @@ on[{"tick", "modulo:4"}] = function(tick)
                   :setUVPixels(72, 0)
                   :setColor(vectors.hexToRGB(data.color))
                   :setMatrix(rotateSpriteAroundPos(0, -onMapPos, SCALE))
+                  :setLight(15)
          else
             inMdl:newSprite(index)
                   :setTexture(indicatorTexture, indicatorTexture:getDimensions():unpack())
@@ -306,13 +313,8 @@ on[{"tick", "modulo:4"}] = function(tick)
                   :region(8, 8)
                   :setColor(vectors.hexToRGB(data.color))
                   :setMatrix(rotateSpriteAroundPos(0, -onMapPos, 8/128 * SCALE))
+                  :setLight(15)
          end
-
-         inMdl:newText(index .. "_text")
-               :setAlignment("CENTER")
-               :setPos(-onMapPos - vec(0, 8, 0))
-               :setText(name)
-               :setOutline(true)
       end
    end
 
@@ -342,12 +344,14 @@ on[{"tick", "modulo:4"}] = function(tick)
                   :region(8, 8)
                   :setColor(colorCache[uuid].color)
                   :setMatrix(rotateSpriteAroundPos(rot, -onMapPos, SCALE))
+                  :setLight(15)
          else
             inMdl:newSprite(v:getUUID())
                   :setTexture(mc21PlayerOffMapIndicator, 8, 8)
                   :region(8, 8)
                   :setColor(colorCache[uuid].color)
                   :setMatrix(rotateSpriteAroundPos(0, -onMapPos, SCALE))
+                  :setLight(15)
          end
       else
          if inRange then
@@ -357,6 +361,7 @@ on[{"tick", "modulo:4"}] = function(tick)
                   :setUVPixels(0, 0)
                   :setColor(colorCache[uuid].color)
                   :setMatrix(rotateSpriteAroundPos(rot, -onMapPos, 8/128 * SCALE))
+                  :setLight(15)
          else
             inMdl:newSprite(v:getUUID())
                   :setTexture(indicatorTexture, 128, 128)
@@ -364,6 +369,7 @@ on[{"tick", "modulo:4"}] = function(tick)
                   :region(8, 8)
                   :setColor(colorCache[uuid].color)
                   :setMatrix(rotateSpriteAroundPos(0, -onMapPos, 8/128 * SCALE))
+                  :setLight(15)
          end
       end
    end
@@ -407,6 +413,7 @@ on["world_render"] = function(delta)
                :setScale(2)
                :setAlignment("CENTER")
                :setOutline(true)
+               :setLight(15)
          waypointTasks[name .. "_name"] = mdl:newText(name .. "_name")
                :setText(toJson {
                   text = name,
@@ -414,6 +421,7 @@ on["world_render"] = function(delta)
                :setPos(screenPos.xy_ + vec(-9 - offset, 4.5, 10000))
                :setAlignment("LEFT")
                :setOutline(true)
+               :setLight(15)
          waypointTasks[name .. "_dist"] = mdl:newText(name .. "_dist")
                :setText(toJson {
                   text = dist,
@@ -421,6 +429,7 @@ on["world_render"] = function(delta)
                :setPos(screenPos.xy_ + vec(9, 4.5, 0))
                :setAlignment("RIGHT")
                :setOutline(true)
+               :setLight(15)
       end
    end
 end
