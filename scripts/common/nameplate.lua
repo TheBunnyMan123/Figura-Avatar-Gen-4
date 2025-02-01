@@ -21,8 +21,8 @@ local styles = {
 
 local compose = TextComponents.newComponent("${badges}")
 compose:append(
-   TextComponents.newComponent("ᚡ", styles.fakeBadge) -- Arosexual mark because I realized after getting my main mark changed
-   :setHoverText(TextComponents.newComponent("Figura Asexual Mark", styles.white))
+   TextComponents.newComponent("ᚣ", styles.fakeBadge) -- Arosexual mark because I realized after getting my main mark changed
+   :setHoverText(TextComponents.newComponent("Figura Asexual Mark!", styles.white))
 )
 compose:append(TextComponents.newComponent("\n:rabbit: Bunny :rabbit:", styles.main))
 
