@@ -280,13 +280,43 @@ local modes = {
 
 on["skull_render"] = function(delta, block, item, entity)
   model:setVisible(true)
+  models.halo.Skull:setVisible(false):setSecondaryRenderType("EMISSIVE_SOLID"):setSecondaryTexture("CUSTOM", textures["models.halo.halo"])
   
-  model:setPos(0, -3, 0)
-
   for _, v in pairs(tasks) do v:remove() end
   tasks = {}
-  if not block then return end
 
+  if entity and item and item:getEquipmentSlot() == "HEAD" then
+    model:setPos(0, 3.65, 0)
+
+    local succ, col = pcall(function()
+      return vectors.hexToRGB(entity:getVariable("halo_color"))
+    end)
+
+    if not succ then col = vec(1, 1, 0.2) end
+
+    for _, v in pairs(models.halo.Skull:getChildren()) do
+      v:setColor(col)
+    end
+    
+    local halo = item:getName() == "halo"
+    model:setVisible(not halo)
+    models.halo.Skull:setVisible(halo)
+
+    return
+  elseif item then
+    local halo = item:getName() == "halo"
+    model:setVisible(not halo)
+    models.halo.Skull:setVisible(halo)
+    
+    for _, v in pairs(models.halo.Skull:getChildren()) do
+      v:setColor(1, 1, 0.2)
+    end
+
+    return
+  else
+    model:setPos(0, -3, 0)
+  end
+  
   local blockBelow = world.getBlockState(block:getPos():sub(0, 1))
   if modes[blockBelow:getID()] then
     local cacheIndex = tostring(block:getPos()):gsub("[%s{}]", "")
