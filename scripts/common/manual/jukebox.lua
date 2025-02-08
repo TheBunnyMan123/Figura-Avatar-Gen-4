@@ -15,8 +15,8 @@ for k, v in pairs(world.newBlock("minecraft:jukebox", 0, 0, 0):getTextures()) do
          local targetX = x * 2
          local targetY = y * 2
 
-         if x == dims.x - 1 then targetX += 1 end
-         if y == dims.y - 1 then targetY += 1 end
+         if x == dims.x - 1 then targetX = targetX + 1 end
+         if y == dims.y - 1 then targetY = targetY + 1 end
 
          texture:setPixel(x, y, vanillaTexture:getPixel(targetX, targetY))
       end

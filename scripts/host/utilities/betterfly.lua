@@ -22,22 +22,22 @@ function events.WORLD_TICK()
    end
 
    if forward:isPressed() then
-      velocity += player:getLookDir()
+      velocity = velocity + player:getLookDir()
    end
    if backward:isPressed() then
-      velocity += player:getLookDir() * -1
+      velocity = velocity + player:getLookDir() * -1
    end
    if left:isPressed() then
-      velocity += vectors.rotateAroundAxis(90, player:getLookDir().x_z:normalize(), vec(0, 1, 0))
+      velocity = velocity + vectors.rotateAroundAxis(90, player:getLookDir().x_z:normalize(), vec(0, 1, 0))
    end
    if right:isPressed() then
-      velocity += vectors.rotateAroundAxis(-90, player:getLookDir().x_z:normalize(), vec(0, 1, 0))
+      velocity = velocity + vectors.rotateAroundAxis(-90, player:getLookDir().x_z:normalize(), vec(0, 1, 0))
    end
    if up:isPressed() then
-      velocity += vec(0, 1, 0)
+      velocity = velocity + vec(0, 1, 0)
    end
    if down:isPressed() then
-      velocity -= vec(0, 1, 0)
+      velocity = velocity - vec(0, 1, 0)
    end
 
    goofy:setVelocity(velocity:normalize() * speed)
