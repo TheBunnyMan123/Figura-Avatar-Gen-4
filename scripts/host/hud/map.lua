@@ -1,6 +1,7 @@
 local TextComponents = require("libs.TheKillerBunny.TextComponents")
 local waypoints = {}
 
+local waypointsEnabled = Wheel.toggles:newToggle("Waypoints", "minecraft:nether_star", function() end)
 local page = require("libs.TheKillerBunny.ActionWheelPlusPlus"):newPage("Waypoints", "minecraft:nether_star")
 
 local color = vec(1, 1, 1)
@@ -387,6 +388,7 @@ on["world_render"] = function(delta)
       v:remove()
    end
    if not player:isLoaded() then return end
+   if not waypointsEnabled:isToggled() then return end
    local dimension = world.getDimension()
 
    for name, data in pairs(waypoints[dimension] or {}) do
