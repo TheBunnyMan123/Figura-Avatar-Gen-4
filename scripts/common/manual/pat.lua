@@ -26,6 +26,8 @@ local function onPat(uuid)
       eyePos = eyePos + player:getVariable("eyePos")
    end
 
+   halfBox.y = eyePos
+
    local playerHeartPos = player:getVariable("patpat.boundingBox").y / 2
    local playerHeartVec = vec(0, playerHeartPos, 0) + player:getPos()
 
