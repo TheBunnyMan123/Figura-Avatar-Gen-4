@@ -53,6 +53,7 @@ model.Body.WingRight.OuterWingRight.InnerClothRight:setScale(0, 0, 0)
 models:addChild(model)
 
 local taskHolder = models:newPart("TKBunny$TaskHolderModels", "SKULL")
+taskHolder:newPart("camera", "CAMERA")
 
 local function compileVec(str)
   local x, y, z = str:match("^(%-?[0-9.]+),(%-?[0-9.]+),(%-?[0-9.]+)$")
@@ -82,8 +83,9 @@ local oldEatTick = 0
 local ate = {}
 local function eat(pos)
   ate[tostring(pos)] = (ate[tostring(pos)] or 0) + 1
-  if ate[tostring(pos)] % 7 == 0 then
+  if (math.random() * ate[tostring(pos)]) >= 10 then
     sounds:playSound("entity.player.burp", pos, 10)
+    ate[tostring(pos)] = 0
   else
     sounds:playSound("entity.generic.eat", pos)
   end
@@ -186,7 +188,7 @@ local modes = {
           :setRot(autorot and vec(0, math.lerpAngle((tick - 1) * 2, tick * 2, delta) or 0, 0) or rot))
       else
         table.insert(tasks, taskHolder.camera:newText("help")
-          :setText("TYPE (B|I|INV);BLOCK/ITEM/RENDERTYPE;POS (x,y,z);SCALE (x,y,z);AUTOROT (any|false);ROT (x,y,z)")
+          :setText("TYPE (B|I);BLOCK/ITEM;POS (x,y,z);SCALE (x,y,z);AUTOROT (any|false);ROT (x,y,z)")
           :setAlignment("CENTER")
           :setPos(0, 13, 0)
           :setScale(0.25)
