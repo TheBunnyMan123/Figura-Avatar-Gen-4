@@ -10,28 +10,8 @@ local particle = BunnyParticles.newParticle({
    textures:fromVanilla("goldheart_0", "minecraft:textures/particle/goldheart_0.png")
 }, 25, vec(0, 3, 0), 0.85)
 
-avatar:store("patpat.noHearts", true)
 avatar:store("patpat.yesPats", true)
 local function onPat(uuid)
-   local patter = world.getEntity(uuid)
-
-   if not patter or not player:isLoaded() then
-      return
-   end
-
-   local halfBox = (patter:getVariable("patpat.boundingBox") or patter:getBoundingBox()) / 2
-
-   local eyePos = vec(0, patter:getEyeHeight(), 0) + player:getPos()
-   if player:getVariable("eyePos") then
-      eyePos = eyePos + player:getVariable("eyePos")
-   end
-
-   halfBox.y = eyePos
-
-   local playerHeartPos = player:getVariable("patpat.boundingBox").y / 2
-   local playerHeartVec = vec(0, playerHeartPos, 0) + player:getPos()
-
-   particle:setPos(patter:getPos() + halfBox:copy():mul(0, 1.25, 0)):setVelocity((playerHeartVec - patter:getPos() - halfBox:copy():mul(0, 1.25, 0)) * 2.35):spawn()
 end
 
 function pings.setInfinipat(state)
