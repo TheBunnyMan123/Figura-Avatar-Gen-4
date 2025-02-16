@@ -106,3 +106,11 @@ on[{"tick", "modulo:20"}] = function()
    particles:newParticle("minecraft:note", soundPos, vec(math.random(), math.random(), math.random())):setScale(0.5)
 end
 
+on["world_tick"] = function()
+   if not player:isLoaded() then
+      if sound then sound:stop() end
+
+      jukebox:setVisible(false)
+   end
+end
+
