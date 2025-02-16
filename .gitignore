@@ -3,6 +3,7 @@ libs/*/*
 !libs/BlueMoonJune/lex.lua
 !libs/TheKillerBunny/BunnySignLib.lua
 !libs/TheKillerBunny/on.lua
+!libs/TheKillerBunny/LuaFormatting.lua
 
 # LuaLS stuff
 .luarc.json

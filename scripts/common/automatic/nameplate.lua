@@ -1,35 +1,13 @@
-local TextComponents = require("libs.TheKillerBunny.TextComponents")
-
-local color
-if client:getDate().month == 10 then
-   color = vec(225, 134, 64)
-elseif client:getDate().month == 12 then
-   color = vec(54, 255, 54)
-else
-   color = vec(50, 255, 150)
-end
+local format = require("libs.TheKillerBunny.LuaFormatting")
+local color = vec(50, 255, 150)
 
 avatar:setColor(color / 255)
 avatar:setColor(color / 255, "donator")
-color = "#" .. vectors.rgbToHex(color / 255)
+color = vectors.rgbToHex(color / 255)
 
-local styles = {
-   main = TextComponents.newStyle():setColor(color),
-   fakeBadge = TextComponents.newStyle():setFont("figura:badges"),
-   white = TextComponents.newStyle()
-}
+nameplate.ALL:setText(toJson(format.toMinecraft [=[$${badges}
+:rabbit: $c32ff96[Bunny] :rabbit:]=]))
 
-local compose = TextComponents.newComponent("${badges}")
-compose:append(
-   TextComponents.newComponent("ᚣ", styles.fakeBadge) -- Arosexual mark because I realized after getting my main mark changed
-   :setHoverText(TextComponents.newComponent("Figura Asexual Mark!", styles.white))
-)
-compose:append(TextComponents.newComponent("\n:rabbit: Bunny :rabbit:", styles.main))
-
-local hover = TextComponents.newComponent("@TheKillerBunny", styles.hover)
-compose:setHoverText(hover)
-
-nameplate.ALL:setText(compose:toJson())
 nameplate.ENTITY
       :setBackgroundColor(0, 0, 0, 0)
       :setOutline(true)
